@@ -1,2 +1,2 @@
-# video_player_pyqt5
+# Video Player
 Video Player made specifically for playing courses videos with layout like Udemy
