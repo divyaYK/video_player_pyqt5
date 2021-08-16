@@ -1,1 +1,1 @@
-kivy[full]
+PyQt5
