@@ -60,18 +60,18 @@ class VideoPlayer(QMainWindow):
   def loadNewScreen(self):
     btn_clicked = self.sender()
     if not hasattr(self, 'screen2'):
-      self.screen2 = VideoRoom()
-      self.screen2.setWindowTitle(btn_clicked.text())
-      self.screen2.show()
+      self.initializeScreen2(btn_clicked)
     elif self.screen2 is None:
-      self.screen2 = VideoRoom()
-      self.screen2.setWindowTitle(btn_clicked.text())
-      self.screen2.show()
+      self.initializeScreen2(btn_clicked)
     else:
       self.screen2 = None
-      self.screen2 = VideoRoom()
-      self.screen2.setWindowTitle(btn_clicked.text())
-      self.screen2.show()
+      self.initializeScreen2(btn_clicked)
+
+  def initializeScreen2(self, btn_clicked):
+    self.screen2 = VideoRoom()
+    self.screen2.setWindowTitle(btn_clicked.text())
+    self.screen2.UI()
+    self.screen2.show()
 
   def openDir(self):
     self.directory = QFileDialog.getExistingDirectory(self, "Select Directory")
