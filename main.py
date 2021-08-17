@@ -1,12 +1,17 @@
 import sys
 import os
 import json
-from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
-class VideoPlayer(QWidget):
-  def __init__(self) -> None:
+from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout, QMainWindow, QPushButton, QVBoxLayout, QWidget
+import stylesheet
+from videoroom import VideoRoom
+class VideoPlayer(QMainWindow):
+  def __init__(self):
     super().__init__()
     self.setWindowTitle("Video Player")
     self.setGeometry(50, 50, 1080, 900)
+    self.setStyleSheet(stylesheet.qMainWindowStyle())
+    self.main_widget = QWidget(self)
+    self.setCentralWidget(self.main_widget)
     self.UI()
     self.show()
 
@@ -31,20 +36,42 @@ class VideoPlayer(QWidget):
 
     self.mainLayout.addLayout(self.topMainLayout)
     self.mainLayout.addLayout(self.gridLayout)
-    self.setLayout(self.mainLayout)
+    self.main_widget.setLayout(self.mainLayout)
 
   def loadGridLayoutWidgets(self):
+    self.btn_list = []
     with open("./directory_log.json", 'r') as read_dirs:
       all_dirs = json.load(read_dirs)
     self.grid_i = 0
     self.grid_j = 0
     for dir in all_dirs["dirs"]:
-      self.gridLayout.addWidget(QPushButton(dir["dir_name"]), self.grid_i, self.grid_j)
-      if self.grid_j < 2:
+      dir_btn = QPushButton(dir["dir_name"])
+      self.btn_list.append(dir_btn)
+      self.gridLayout.addWidget(dir_btn, self.grid_i, self.grid_j)
+      if self.grid_j < 1:
         self.grid_j += 1
       else:
         self.grid_j = 0
         self.grid_i += 1
+
+    for btn in self.btn_list:
+      btn.released.connect(self.loadNewScreen)
+
+  def loadNewScreen(self):
+    btn_clicked = self.sender()
+    if not hasattr(self, 'screen2'):
+      self.screen2 = VideoRoom()
+      self.screen2.setWindowTitle(btn_clicked.text())
+      self.screen2.show()
+    elif self.screen2 is None:
+      self.screen2 = VideoRoom()
+      self.screen2.setWindowTitle(btn_clicked.text())
+      self.screen2.show()
+    else:
+      self.screen2 = None
+      self.screen2 = VideoRoom()
+      self.screen2.setWindowTitle(btn_clicked.text())
+      self.screen2.show()
 
   def openDir(self):
     self.directory = QFileDialog.getExistingDirectory(self, "Select Directory")
