@@ -1,12 +1,10 @@
 import os
 import json
-from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtCore import QTimer, QUrl, Qt
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
 
-
-os.environ["QT_GSTREAMER_PLAYBIN_FLAGS"] = str(0x00000017)
 class VideoRoom(QWidget):
   def __init__(self):
     super().__init__()
@@ -49,6 +47,8 @@ class VideoRoom(QWidget):
     self.positionSlider.setRange(0, 0)
     self.positionSlider.sliderMoved.connect(self.setVideoPosition)
 
+    self.durationLabel = QLabel()
+
   def layouts(self):
     self.roomLayout = QHBoxLayout()
     self.videoOnlyLayout = QVBoxLayout()
@@ -56,13 +56,16 @@ class VideoRoom(QWidget):
     self.videoWithNotesLayout = QVBoxLayout()
     self.notesLayout = QHBoxLayout()
     self.videoControlLayout = QHBoxLayout()
+    self.subtitleLayout = QVBoxLayout()
 
     self.videoOnlyLayout.addWidget(self.videoWidget)
     self.videoControlLayout.addWidget(self.playButton)
     self.videoControlLayout.addWidget(self.positionSlider)
+    self.videoControlLayout.addWidget(self.durationLabel)
 
     self.setVideoListLayout()
 
+    self.videoOnlyLayout.addLayout(self.subtitleLayout)
     self.videoOnlyLayout.addLayout(self.videoControlLayout)
     self.videoWithNotesLayout.addLayout(self.videoOnlyLayout)
     self.videoWithNotesLayout.addLayout(self.notesLayout)
@@ -108,9 +111,10 @@ class VideoRoom(QWidget):
   def videoSelected(self, video_file):
     video_data = video_file.data(Qt.UserRole)
     if video_data[0] != "":
-      self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile((video_data[0]))))
-      self.playButton.setEnabled(True)
-      self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+      self.mediaPlayer.setMedia(QMediaContent(
+          QUrl.fromLocalFile((video_data[0]))))
+
+      self.startVideo()
 
   def playVideo(self):
     if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
@@ -126,9 +130,56 @@ class VideoRoom(QWidget):
       self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
     else:
       self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-  
+
   def durationChanged(self, duration):
     self.positionSlider.setRange(0, duration)
-  
+    self.updateDurationLabel()
+
   def positionChanged(self, position):
     self.positionSlider.setValue(position)
+
+  def startVideo(self):
+    self.videoTimer = QTimer()
+    self.currentDuration = 0
+    self.videoTimer.setInterval(1000)
+    self.videoTimer.timeout.connect(self.updateDurationLabel)
+    self.playButton.setEnabled(True)
+    self.mediaPlayer.play()
+    self.videoTimer.start()
+    self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+
+  def updateDurationLabel(self):
+    video_total_time = round(self.mediaPlayer.duration()/ 1000)
+    video_current_time = self.currentDuration + 1
+    self.currentDuration += 1
+
+    video_total_hours = 0
+    video_total_mins = 0
+    video_total_secs = video_total_time
+
+    video_current_hours = 0
+    video_current_mins = 0
+    video_current_secs = video_current_time
+
+    if video_total_time >= 60:
+      video_total_mins = video_total_time // 60
+      video_total_secs = video_total_time % 60
+
+      if video_total_mins >= 60:
+        video_total_hours = video_total_mins // 60
+        video_total_mins = video_total_mins % 60
+
+    if video_current_time >= 60:
+      video_current_mins = video_current_time // 60
+      video_current_secs = video_current_time % 60
+
+      if video_current_mins >= 60:
+        video_current_hours = video_current_mins // 60
+        video_current_mins = video_current_mins % 60
+
+    duration_text = f"{video_current_hours:02}:{video_current_mins:02}:{video_current_secs:02}"
+    total_duration_text = f"{video_total_hours:02}:{video_total_mins:02}:{video_total_secs:02}"
+
+    self.durationLabel.setText(duration_text + "/")
+    if duration_text == total_duration_text:
+      self.videoTimer.stop()
