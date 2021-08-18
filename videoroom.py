@@ -1,9 +1,11 @@
 import os
 import json
+import pysrt
 from PyQt5.QtCore import QTimer, QUrl, Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QLayout, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QTextEdit, QToolBox, QVBoxLayout, QWidget
 
 class VideoRoom(QWidget):
   def __init__(self):
@@ -48,6 +50,13 @@ class VideoRoom(QWidget):
     self.positionSlider.sliderMoved.connect(self.setVideoPosition)
 
     self.durationLabel = QLabel()
+    self.fullScreenBtn = QPushButton()
+    self.fullScreenBtn.setIcon(QIcon("./images/icons/fullscreen.png"))
+    self.fullScreenBtn.clicked.connect(self.switchToFullScreen)
+
+    self.subtitleLabel = QLabel()
+    self.subtitleLabel.setFixedHeight(50)
+    self.subtitleLabel.setAlignment(Qt.AlignCenter)
 
   def layouts(self):
     self.roomLayout = QHBoxLayout()
@@ -56,16 +65,18 @@ class VideoRoom(QWidget):
     self.videoWithNotesLayout = QVBoxLayout()
     self.notesLayout = QHBoxLayout()
     self.videoControlLayout = QHBoxLayout()
-    self.subtitleLayout = QVBoxLayout()
 
     self.videoOnlyLayout.addWidget(self.videoWidget)
+    self.videoOnlyLayout.addWidget(self.subtitleLabel)
+    self.videoControlLayout.addStretch()
     self.videoControlLayout.addWidget(self.playButton)
     self.videoControlLayout.addWidget(self.positionSlider)
     self.videoControlLayout.addWidget(self.durationLabel)
+    self.videoControlLayout.addWidget(self.fullScreenBtn)
+    self.videoControlLayout.addStretch()
 
     self.setVideoListLayout()
 
-    self.videoOnlyLayout.addLayout(self.subtitleLayout)
     self.videoOnlyLayout.addLayout(self.videoControlLayout)
     self.videoWithNotesLayout.addLayout(self.videoOnlyLayout)
     self.videoWithNotesLayout.addLayout(self.notesLayout)
@@ -113,6 +124,7 @@ class VideoRoom(QWidget):
     if video_data[0] != "":
       self.mediaPlayer.setMedia(QMediaContent(
           QUrl.fromLocalFile((video_data[0]))))
+      self.subtitle_file = video_data[1]
 
       self.startVideo()
 
@@ -124,6 +136,8 @@ class VideoRoom(QWidget):
 
   def setVideoPosition(self, position):
     self.mediaPlayer.setPosition(position)
+    self.currentDuration = position / 1000
+    self.updateDurationLabel()
 
   def mediaStateChanged(self):
     if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
@@ -149,7 +163,7 @@ class VideoRoom(QWidget):
     self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
 
   def updateDurationLabel(self):
-    video_total_time = round(self.mediaPlayer.duration()/ 1000)
+    video_total_time = round(self.mediaPlayer.duration() / 1000)
     video_current_time = self.currentDuration + 1
     self.currentDuration += 1
 
@@ -177,9 +191,32 @@ class VideoRoom(QWidget):
         video_current_hours = video_current_mins // 60
         video_current_mins = video_current_mins % 60
 
-    duration_text = f"{video_current_hours:02}:{video_current_mins:02}:{video_current_secs:02}"
-    total_duration_text = f"{video_total_hours:02}:{video_total_mins:02}:{video_total_secs:02}"
+    duration_text = f"{video_current_hours:02}:{video_current_mins:02}:{int(video_current_secs):02}"
+    total_duration_text = f"{video_total_hours:02}:{video_total_mins:02}:{int(video_total_secs):02}"
 
-    self.durationLabel.setText(duration_text + "/")
+    self.durationLabel.setText(duration_text + "/" + total_duration_text)
+    self.updateSubtitles()
     if duration_text == total_duration_text:
       self.videoTimer.stop()
+
+  def updateSubtitles(self):
+    subs = pysrt.open(self.subtitle_file)
+    for sub in subs:
+      start_total = (sub.start.hours * 60 * 60) + (sub.start.minutes *
+                                                   60) + sub.start.seconds + (sub.start.milliseconds / 1000)
+      sub_start_time = round(start_total)
+      if sub_start_time == self.currentDuration:
+        self.subtitleLabel.setText(sub.text)
+
+      end_total = (sub.end.hours * 60 * 60) + (sub.end.minutes *
+                                               60) + sub.end.seconds + (sub.end.milliseconds / 1000)
+      sub_end_time = round(end_total)
+      if sub_end_time == self.currentDuration:
+        self.subtitleLabel.setText("")
+
+  def switchToFullScreen(self):
+    self.toolbox.setHidden(not self.toolbox.isHidden())
+    if self.windowState() != Qt.WindowFullScreen:
+      self.setWindowState(Qt.WindowFullScreen)
+    else:
+      self.showNormal()
