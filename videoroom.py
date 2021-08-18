@@ -5,7 +5,7 @@ from PyQt5.QtCore import QTimer, QUrl, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QLayout, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QTextEdit, QToolBox, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
 
 class VideoRoom(QWidget):
   def __init__(self):
@@ -68,12 +68,12 @@ class VideoRoom(QWidget):
 
     self.videoOnlyLayout.addWidget(self.videoWidget)
     self.videoOnlyLayout.addWidget(self.subtitleLabel)
-    self.videoControlLayout.addStretch()
+
     self.videoControlLayout.addWidget(self.playButton)
     self.videoControlLayout.addWidget(self.positionSlider)
     self.videoControlLayout.addWidget(self.durationLabel)
     self.videoControlLayout.addWidget(self.fullScreenBtn)
-    self.videoControlLayout.addStretch()
+
 
     self.setVideoListLayout()
 
@@ -198,6 +198,8 @@ class VideoRoom(QWidget):
     self.updateSubtitles()
     if duration_text == total_duration_text:
       self.videoTimer.stop()
+    
+    self.checkWindowOpen()
 
   def updateSubtitles(self):
     subs = pysrt.open(self.subtitle_file)
@@ -220,3 +222,8 @@ class VideoRoom(QWidget):
       self.setWindowState(Qt.WindowFullScreen)
     else:
       self.showNormal()
+
+  def checkWindowOpen(self):
+    if not self.isVisible():
+      self.mediaPlayer.stop()
+      self.videoTimer.stop()
