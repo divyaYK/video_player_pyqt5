@@ -1,7 +1,7 @@
 import sys
 import os
 import json
-from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QFileDialog, QGridLayout, QHBoxLayout, QMainWindow, QPushButton, QStyle, QVBoxLayout, QWidget
 import stylesheet
 from videoroom import VideoRoom
 class VideoPlayer(QMainWindow):
@@ -21,6 +21,8 @@ class VideoPlayer(QMainWindow):
 
   def widgets(self):
     self.choose_dir = QPushButton("Choose Directory")
+    self.choose_dir.setStyleSheet(stylesheet.qPushButtonStyle())
+    self.choose_dir.setFixedSize(200, 100)
     self.choose_dir.clicked.connect(self.openDir)
 
   def layouts(self):
@@ -46,6 +48,9 @@ class VideoPlayer(QMainWindow):
     self.grid_j = 0
     for dir in all_dirs["dirs"]:
       dir_btn = QPushButton(dir["dir_name"])
+      dir_btn.setStyleSheet(stylesheet.qDirsButtonStyle())
+      dir_btn.setFixedWidth(500)
+      dir_btn.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
       self.btn_list.append(dir_btn)
       self.gridLayout.addWidget(dir_btn, self.grid_i, self.grid_j)
       if self.grid_j < 1:

@@ -8,11 +8,13 @@ from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
 
 from helper import natural_keys
+import stylesheet
 
 class VideoRoom(QWidget):
   def __init__(self):
     super().__init__()
-    self.setGeometry(50, 50, 1080, 900)
+    self.setGeometry(50, 50, 1500, 900)
+    self.setStyleSheet(stylesheet.qVideoScreenStyle())
 
   def UI(self):
     dir_name = self.windowTitle()
@@ -43,6 +45,7 @@ class VideoRoom(QWidget):
   def widgets(self):
     self.videoWidget = QVideoWidget()
     self.playButton = QPushButton()
+    self.playButton.setStyleSheet(stylesheet.qPlayButtonStyle())
     self.playButton.setEnabled(False)
     self.playButton.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
     self.playButton.clicked.connect(self.playVideo)
@@ -54,11 +57,13 @@ class VideoRoom(QWidget):
     self.durationLabel = QLabel()
 
     self.playBackRateBtn = QDoubleSpinBox()
+    self.playBackRateBtn.setStyleSheet(stylesheet.qPlayBackRateButtonStyle())
     self.playBackRateBtn.setSingleStep(0.25)
     self.playBackRateBtn.setValue(1)
     self.playBackRateBtn.valueChanged.connect(self.setVideoPlayBackRate)
 
     self.fullScreenBtn = QPushButton()
+    self.fullScreenBtn.setStyleSheet(stylesheet.qPlayButtonStyle())
     self.fullScreenBtn.setIcon(QIcon("./images/icons/fullscreen.png"))
     self.fullScreenBtn.clicked.connect(self.switchToFullScreen)
 
@@ -102,6 +107,8 @@ class VideoRoom(QWidget):
   def setVideoListLayout(self):
     self.toolbox = QToolBox()
     self.toolbox.setFixedWidth(400)
+    self.toolbox.setStyleSheet(stylesheet.qToolBoxStyle())
+    
     self.all_dir_names.sort(key=natural_keys)
     self.all_dir_paths.sort(key=natural_keys)
 
@@ -110,6 +117,7 @@ class VideoRoom(QWidget):
       valid_videos = ['.mp4', '.3gp', '.avi', '.webm']
       valid_subtitles = ['.scc', '.srt', '.3gpp']
       dir_content_list = QListWidget()
+      dir_content_list.setStyleSheet(stylesheet.qListWidgetStyle())
       all_files_in_path = os.listdir(path)
       all_files_in_path.sort(key=natural_keys)
       for file in all_files_in_path:
