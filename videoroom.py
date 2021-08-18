@@ -7,6 +7,8 @@ from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
 
+from helper import natural_keys
+
 class VideoRoom(QWidget):
   def __init__(self):
     super().__init__()
@@ -81,7 +83,6 @@ class VideoRoom(QWidget):
     self.videoControlLayout.addWidget(self.playBackRateBtn)
     self.videoControlLayout.addWidget(self.fullScreenBtn)
 
-
     self.setVideoListLayout()
 
     self.videoOnlyLayout.addLayout(self.videoControlLayout)
@@ -101,16 +102,21 @@ class VideoRoom(QWidget):
   def setVideoListLayout(self):
     self.toolbox = QToolBox()
     self.toolbox.setFixedWidth(400)
+    self.all_dir_names.sort(key=natural_keys)
+    self.all_dir_paths.sort(key=natural_keys)
+
     for path in self.all_dir_paths:
       subtitle_list = []
       valid_videos = ['.mp4', '.3gp', '.avi', '.webm']
       valid_subtitles = ['.scc', '.srt', '.3gpp']
       dir_content_list = QListWidget()
-      for file in os.listdir(path):
+      all_files_in_path = os.listdir(path)
+      all_files_in_path.sort(key=natural_keys)
+      for file in all_files_in_path:
         filename, extension = os.path.splitext(file)
         if extension.lower() in valid_subtitles:
           subtitle_list.append(file)
-      for file in os.listdir(path):
+      for file in all_files_in_path:
         filename, extension = os.path.splitext(file)
         if extension.lower() in valid_videos:
           video_data = [str(path) + '/' + file]
@@ -206,7 +212,7 @@ class VideoRoom(QWidget):
     self.updateSubtitles()
     if duration_text == total_duration_text:
       self.videoTimer.stop()
-    
+
     self.checkWindowOpen()
 
   def updateSubtitles(self):
