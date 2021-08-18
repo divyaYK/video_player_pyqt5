@@ -5,7 +5,7 @@ from PyQt5.QtCore import QTimer, QUrl, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout, QLabel, QListWidget, QListWidgetItem, QPushButton, QSlider, QStyle, QToolBox, QVBoxLayout, QWidget
 
 class VideoRoom(QWidget):
   def __init__(self):
@@ -50,6 +50,12 @@ class VideoRoom(QWidget):
     self.positionSlider.sliderMoved.connect(self.setVideoPosition)
 
     self.durationLabel = QLabel()
+
+    self.playBackRateBtn = QDoubleSpinBox()
+    self.playBackRateBtn.setSingleStep(0.25)
+    self.playBackRateBtn.setValue(1)
+    self.playBackRateBtn.valueChanged.connect(self.setVideoPlayBackRate)
+
     self.fullScreenBtn = QPushButton()
     self.fullScreenBtn.setIcon(QIcon("./images/icons/fullscreen.png"))
     self.fullScreenBtn.clicked.connect(self.switchToFullScreen)
@@ -72,6 +78,7 @@ class VideoRoom(QWidget):
     self.videoControlLayout.addWidget(self.playButton)
     self.videoControlLayout.addWidget(self.positionSlider)
     self.videoControlLayout.addWidget(self.durationLabel)
+    self.videoControlLayout.addWidget(self.playBackRateBtn)
     self.videoControlLayout.addWidget(self.fullScreenBtn)
 
 
@@ -93,6 +100,7 @@ class VideoRoom(QWidget):
 
   def setVideoListLayout(self):
     self.toolbox = QToolBox()
+    self.toolbox.setFixedWidth(400)
     for path in self.all_dir_paths:
       subtitle_list = []
       valid_videos = ['.mp4', '.3gp', '.avi', '.webm']
@@ -222,6 +230,10 @@ class VideoRoom(QWidget):
       self.setWindowState(Qt.WindowFullScreen)
     else:
       self.showNormal()
+
+  def setVideoPlayBackRate(self):
+    playback_rate = self.playBackRateBtn.value()
+    self.mediaPlayer.setPlaybackRate(playback_rate)
 
   def checkWindowOpen(self):
     if not self.isVisible():
